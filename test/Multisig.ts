@@ -50,7 +50,7 @@ describe("Multisig", function () {
       expect(validSigners[0]).not.to.be.equal(ethers.ZeroAddress);
       expect(validSigners[1]).not.to.be.equal(ethers.ZeroAddress);
       expect(validSigners[2]).not.to.be.equal(ethers.ZeroAddress);
-      multisig.connect(validSigners[0])
+      multisig.connect(validSigners[0]);
     });
 
     it("Check if quorum is less than ot equal to valid signers", async () => {
@@ -59,7 +59,6 @@ describe("Multisig", function () {
       );
       expect(quorum).to.be.lte(validSigners.length);
     });
-
 
     it("Check if quorum greater than 1", async () => {
       const { multisig, quorum } = await loadFixture(deployMultisigFixture);
@@ -70,13 +69,16 @@ describe("Multisig", function () {
       const { multisig } = await loadFixture(deployMultisigFixture);
       expect(await multisig.txCount()).to.be.equal(0);
     });
-    
   });
 
   describe("Transfer", function () {
     it("Should check if zero address exist ", async function () {
-      const { multisig, validSigners } = await loadFixture(deployMultisigFixture);
-      expect(multisig.connect(validSigners[0])).not.to.be.equal(ethers.ZeroAddress);
+      const { multisig, validSigners } = await loadFixture(
+        deployMultisigFixture
+      );
+      expect(multisig.connect(validSigners[0])).not.to.be.equal(
+        ethers.ZeroAddress
+      );
     });
 
     it("Should check for valid signer", async function () {
@@ -86,10 +88,14 @@ describe("Multisig", function () {
     });
 
     it("Should check if amount is zero", async function () {
-      const { multisig, adr3, validSigners } = await loadFixture(deployMultisigFixture);
+      const { multisig, adr3, validSigners } = await loadFixture(
+        deployMultisigFixture
+      );
       const { token } = await loadFixture(deployToken);
       await expect(
-        multisig.connect(validSigners[0]).transfer(ethers.parseUnits("0", 18), adr3, token.getAddress())
+        multisig
+          .connect(validSigners[0])
+          .transfer(ethers.parseUnits("0", 18), adr3, token.getAddress())
       ).to.be.revertedWith("can't send zero amount");
     });
 
@@ -121,9 +127,7 @@ describe("Multisig", function () {
       const { multisig, adr3 } = await loadFixture(deployMultisigFixture);
       const { token } = await loadFixture(deployToken);
       const amount = 0;
-      expect(await token.balanceOf(multisig.getAddress())).to.be.gte(
-        amount
-      );
+      expect(await token.balanceOf(multisig.getAddress())).to.be.gte(amount);
     });
 
     it("Should create a transaction", async () => {
@@ -133,43 +137,34 @@ describe("Multisig", function () {
       const { token } = await loadFixture(deployToken);
       const trfAmount = ethers.parseUnits("100000", 18);
       await token.transfer(multisig.getAddress(), trfAmount);
-      let dx = await multisig.connect(validSigners[0]).transfer(
-        ethers.parseUnits("10000", 18),
-        adr3,
-        token.getAddress()
-      )
-      expect(
-       dx
-      );
+      let dx = await multisig
+        .connect(validSigners[0])
+        .transfer(ethers.parseUnits("10000", 18), adr3, token.getAddress());
+      expect(dx);
 
       let add = await token.balanceOf(adr3);
       console.log(add);
     });
 
-    it("Should check for a transaction", async ()=>{
+    it("Should check for a transaction", async () => {
       const { multisig, adr3, quorum, validSigners } = await loadFixture(
         deployMultisigFixture
       );
       const { token } = await loadFixture(deployToken);
       const trfAmount = ethers.parseUnits("100000", 18);
       await token.transfer(multisig.getAddress(), trfAmount);
-      await multisig.connect(validSigners[0]).transfer(
-        ethers.parseUnits("10000", 18),
-        adr3,
-        token.getAddress()
-      )
+      await multisig
+        .connect(validSigners[0])
+        .transfer(ethers.parseUnits("10000", 18), adr3, token.getAddress());
       const tx = await multisig.transactions(1);
       expect(tx.noOfApproval).to.be.lte(quorum);
       expect(await multisig.txCount()).to.be.equal(1);
-
-    })
+    });
   });
 
   describe("Approvetx", function () {
     it("should check for tx id", async () => {
-      const { multisig } = await loadFixture(
-        deployMultisigFixture
-      );
+      const { multisig } = await loadFixture(deployMultisigFixture);
       expect(multisig.approveTx(0)).to.be.revertedWith("invalid tx id");
     });
 
@@ -189,14 +184,12 @@ describe("Multisig", function () {
       const { token } = await loadFixture(deployToken);
       const trfAmount = ethers.parseUnits("100000", 18);
       await token.transfer(multisig.getAddress(), trfAmount);
-      await multisig.connect(validSigners[0]).transfer(
-        ethers.parseUnits("10000", 18),
-        adr3,
-        token.getAddress()
-      )
+      await multisig
+        .connect(validSigners[0])
+        .transfer(ethers.parseUnits("10000", 18), adr3, token.getAddress());
       let dx = await multisig.transactions(1);
 
-      await multisig.connect(validSigners[1]).approveTx(dx.id)
+      await multisig.connect(validSigners[1]).approveTx(dx.id);
 
       dx = await multisig.transactions(1);
 
@@ -205,81 +198,78 @@ describe("Multisig", function () {
 
       dx = await multisig.transactions(1);
 
-     await multisig.connect(validSigners[2]).approveTx(dx.id)
-     
-     dx = await multisig.transactions(1);
+      await multisig.connect(validSigners[2]).approveTx(dx.id);
 
-     expect(dx.isCompleted).to.be.true;
-     expect(dx.noOfApproval).to.equal(3); 
+      dx = await multisig.transactions(1);
 
-     dx = await multisig.transactions(1);
+      expect(dx.isCompleted).to.be.true;
+      expect(dx.noOfApproval).to.equal(3);
+
+      dx = await multisig.transactions(1);
       expect(!dx.isCompleted).to.be.revertedWith(
         "transaction already completed"
       );
     });
 
     it("Should check if approval has reached ", async function () {
-      const { multisig, validSigners,adr3, quorum } = await loadFixture(
+      const { multisig, validSigners, adr3, quorum } = await loadFixture(
         deployMultisigFixture
       );
       const { token } = await loadFixture(deployToken);
       const trfAmount = ethers.parseUnits("100000", 18);
       await token.transfer(multisig.getAddress(), trfAmount);
-      await multisig.connect(validSigners[0]).transfer(
-        ethers.parseUnits("10000", 18),
-        adr3,
-        token.getAddress()
-      )
-      const dx =  await multisig.transactions(1);
+      await multisig
+        .connect(validSigners[0])
+        .transfer(ethers.parseUnits("10000", 18), adr3, token.getAddress());
+      const dx = await multisig.transactions(1);
       expect(dx.noOfApproval).to.be.lt(quorum);
     });
 
     it("Should check if it's a valid signer ", async function () {
-      const { multisig, adr4, validSigners } = await loadFixture(deployMultisigFixture);
+      const { multisig, adr4, validSigners } = await loadFixture(
+        deployMultisigFixture
+      );
       const { token } = await loadFixture(deployToken);
       const trfAmount = ethers.parseUnits("100000", 18);
       await token.transfer(multisig.getAddress(), trfAmount);
-      await multisig.connect(validSigners[0]).transfer(
-        ethers.parseUnits("10000", 18),
-        adr4,
-        token.getAddress()
-      )
+      await multisig
+        .connect(validSigners[0])
+        .transfer(ethers.parseUnits("10000", 18), adr4, token.getAddress());
       const dx = await multisig.transactions(1);
-      expect(multisig.connect(adr4).approveTx(dx.id)).to.be.revertedWith("not a valid signer");
+      expect(multisig.connect(adr4).approveTx(dx.id)).to.be.revertedWith(
+        "not a valid signer"
+      );
     });
 
     it("Should check if signer have signed before ", async function () {
-      const { multisig,adr3, validSigners } = await loadFixture(
+      const { multisig, adr3, validSigners } = await loadFixture(
         deployMultisigFixture
       );
       const { token } = await loadFixture(deployToken);
       const trfAmount = ethers.parseUnits("100000", 18);
       await token.transfer(multisig.getAddress(), trfAmount);
-      await multisig.connect(validSigners[0]).transfer(
-        ethers.parseUnits("10000", 18),
-        adr3,
-        token.getAddress()
-      )
+      await multisig
+        .connect(validSigners[0])
+        .transfer(ethers.parseUnits("10000", 18), adr3, token.getAddress());
       const dx = await multisig.transactions(1);
-      expect(multisig.connect(validSigners[0]).approveTx(dx.id)).to.be.revertedWith("can't sign twice");
-     });
-
+      expect(
+        multisig.connect(validSigners[0]).approveTx(dx.id)
+      ).to.be.revertedWith("can't sign twice");
+    });
 
     it("Should tranfer the funds ", async function () {
-      const { multisig,quorum, adr3, validSigners } = await loadFixture(
+      const { multisig, quorum, adr3, validSigners } = await loadFixture(
         deployMultisigFixture
       );
       const { token } = await loadFixture(deployToken);
       const trfAmount = ethers.parseUnits("100000", 18);
       await token.transfer(multisig.getAddress(), trfAmount);
-      await multisig.connect(validSigners[0]).transfer(
-        ethers.parseUnits("100", 18),
-        adr3,
-        token.getAddress()
-      )
+      await multisig
+        .connect(validSigners[0])
+        .transfer(ethers.parseUnits("100", 18), adr3, token.getAddress());
       let dx = await multisig.transactions(1);
 
-      await multisig.connect(validSigners[1]).approveTx(dx.id)
+      await multisig.connect(validSigners[1]).approveTx(dx.id);
 
       dx = await multisig.transactions(1);
 
@@ -288,14 +278,53 @@ describe("Multisig", function () {
 
       dx = await multisig.transactions(1);
 
-     await multisig.connect(validSigners[2]).approveTx(dx.id)
-     
-     dx = await multisig.transactions(1);
-     expect(dx.noOfApproval).to.equal(3);
+      await multisig.connect(validSigners[2]).approveTx(dx.id);
+
+      dx = await multisig.transactions(1);
+      expect(dx.noOfApproval).to.equal(3);
       expect(dx.noOfApproval).to.be.equal(quorum);
-        expect(dx.isCompleted).to.be.true;
-        const recipientBalance = await token.balanceOf(adr3);
-    expect(recipientBalance).to.equal(ethers.parseUnits("100", 18));
+      expect(dx.isCompleted).to.be.true;
+      const recipientBalance = await token.balanceOf(adr3);
+      expect(recipientBalance).to.equal(ethers.parseUnits("100", 18));
+    });
+  });
+
+  describe("UpdateQuorum", function () {
+    it("Should check if zero address exist ", async function () {
+      const { multisig, validSigners } = await loadFixture(
+        deployMultisigFixture
+      );
+      expect(multisig.connect(validSigners[0])).not.to.be.equal(
+        ethers.ZeroAddress
+      );
+    });
+
+    it("Should check for valid signer", async function () {
+      const { adr1 } = await loadFixture(deployMultisigFixture);
+
+      expect(adr1).to.be.revertedWith("invalid signer");
+    });
+
+    it("Should check if quorum is 0", async function () {
+      const { multisig, validSigners } = await loadFixture(
+        deployMultisigFixture
+      );
+
+      // expect(await multisig.updateQuorum(3)).to.be.gt(1);
+    });
+
+    it("Should check if it's a valid signer ", async function () {
+      const { multisig, adr4, validSigners } = await loadFixture(
+        deployMultisigFixture
+      );
+      const { token } = await loadFixture(deployToken);
+      const trfAmount = ethers.parseUnits("100000", 18);
+      await token.transfer(multisig.getAddress(), trfAmount);
+      await multisig.connect(validSigners[0]).updateQuorum(3);
+      const dx = await multisig.transactions(1);
+      expect(multisig.connect(adr4).updateQuorum(dx.newQuorum)).to.be.revertedWith(
+        "not a valid signer"
+      );
     });
   });
 });
